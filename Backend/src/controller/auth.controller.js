@@ -84,4 +84,8 @@ return res.status(200).json({
 })
 }
 
+async function getMe(req,res){
+    const user = userModel.findById(req.user.id)
+}
+
 module.exports = { registerUser, loginUser }
