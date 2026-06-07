@@ -74,7 +74,7 @@ async function loginUser(req,res){
     expiresIn: "3d"
 })
 
-res.cookies("token", token)
+res.cookie("token", token)
 
 return res.status(200).json({
     message:"User successfully Login",
@@ -87,23 +87,30 @@ return res.status(200).json({
 }
 
 async function getMe(req,res){
-    const user = userModel.findById(req.user.id)
-    res.status(200).json({
-        message:"User fetch successfully",
+    if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = await userModel.findById(req.user.id).select("-password");
+
+    return res.status(200).json({
+        message: "User fetched successfully",
         user
-    })
+    });
 }
 
 async function logoutUser(req,res){
-    const token = req.cookies.token
+    const token = req.cookies && req.cookies.token;
 
-    res.clearCookie("token")
+    res.clearCookie("token");
 
-    await redis.set(token, Date.now().toString(), "EX",60*60)
+    if (token) {
+        await redis.set(token, Date.now().toString(), "EX", 60 * 60);
+    }
 
-    res.status(200).json({
-        message:"logout Successfully"
-    })
+    return res.status(200).json({
+        message: "logout Successfully"
+    });
 }
 
 module.exports = { registerUser, loginUser, getMe, logoutUser }

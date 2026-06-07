@@ -23,8 +23,14 @@ export const init = async ({ landmarkerRef, videoRef, streamRef }) => {
     );
 
     streamRef.current = await navigator.mediaDevices.getUserMedia({ video: true });
-    videoRef.current.srcObject = streamRef.current;
-    await videoRef.current.play();
+    if (videoRef.current) {
+        videoRef.current.srcObject = streamRef.current;
+        await videoRef.current.play();
+    } else {
+        // If the component unmounted or ref is not set, stop the stream
+        streamRef.current.getTracks().forEach((t) => t.stop());
+        throw new Error("Video element not available");
+    }
 };
 
 export const detect = ({ landmarkerRef, videoRef, setExpression }) => {
